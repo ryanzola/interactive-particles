@@ -51,7 +51,11 @@ void main() {
     vec3 tangent = getTangent(progress);
     vec3 binormal = normalize(cross(normal, tangent));
 
-    pos += normal * aRandom.y * 0.1 + binormal * aRandom.z * 0.1;
+    float radius = 0.3 + aRandom.z * 0.2;
+    float cx = radius * cos(aRandom.y * PI * 2.0 * time * 0.1 + aRandom.z * 7.0);
+    float cy = radius * sin(aRandom.y * PI * 2.0 * time * 0.1 + aRandom.z * 7.0);
+
+    pos += normal * cx + binormal * cy;
 
     vUv = uv;
     vPosition = position;
@@ -60,6 +64,6 @@ void main() {
     
     vec4 mvPosition = modelViewMatrix * vec4( pos, 1.0 );
 
-    gl_PointSize = 10.0 * ( 1.0 / - mvPosition.z );
+    gl_PointSize = 30.0 * ( 1.0 / - mvPosition.z );
     gl_Position = projectionMatrix * mvPosition;
 }

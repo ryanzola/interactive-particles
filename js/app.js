@@ -2,8 +2,17 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import GUI from 'lil-gui';
 
-import vertex from './shader/vertexParticles.glsl';
-import fragment from './shader/fragment.glsl';
+import vertexParticles from './shader/particles/vertex.glsl';
+import fragmentParticles from './shader/particles/fragment.glsl';
+
+import vertexTube from './shader/tube/vertex.glsl';
+import fragmentTube from './shader/tube/fragment.glsl';
+
+import sphere from '../img/sphere-normal.jpg';
+import dots from '../img/dots.png';
+import stripes from '../img/stripes.png';
+
+const { sin, cos, PI } = Math;
 
 // https://en.wikipedia.org/wiki/Trefoil_knot
 
@@ -25,14 +34,14 @@ export default class Sketch {
     this.container.appendChild(this.renderer.domElement);
 
     this.camera = new THREE.PerspectiveCamera(70, this.width / this.height, 0.01, 1000);
-    this.camera.position.z = 3;
+    this.camera.position.z = 4;
 
     this.controls = new OrbitControls(this.camera, this.renderer.domElement);
 
     this.time = 0;
     this.mouse = new THREE.Vector2();
 
-    this.setupSettings();
+    // this.setupSettings();
     this.setupResize();
     this.resize();
     this.mouseEvents();
@@ -82,9 +91,12 @@ export default class Sketch {
         progress: { value: 0 },
         mouse: { value: new THREE.Vector2() },
         time: { value: 0 },
+        uNormals: { value: new THREE.TextureLoader().load(sphere) }
       },
-      vertexShader: vertex,
-      fragmentShader: fragment,
+      vertexShader: vertexParticles,
+      fragmentShader: fragmentParticles,
+      depthTest: false,
+      transparent: true,
     })
 
     let number = 10000
@@ -113,6 +125,44 @@ export default class Sketch {
     this.mesh = new THREE.Points(this.geometry, this.material);
 
     this.scene.add(this.mesh);
+
+    let points = []
+
+    for(let i = 0; i < 100; i++) {
+      let angle = 2 * PI * i / 100;
+
+      let x = sin(angle) + 2.0 * sin(2.0 * angle);
+      let y = cos(angle) - 2.0 * cos(2.0 * angle);
+      let z = - sin(3.0 * angle);
+
+      points.push(new THREE.Vector3(x, y, z));
+    }
+
+    let dotsTexture = new THREE.TextureLoader().load(dots);
+    let stripesTexture = new THREE.TextureLoader().load(stripes);
+
+    dotsTexture.wrapS = dotsTexture.wrapT = THREE.RepeatWrapping;
+    stripesTexture.wrapS = stripesTexture.wrapT = THREE.RepeatWrapping;
+
+    let curve = new THREE.CatmullRomCurve3(points);
+    this.tubeGeo = new THREE.TubeGeometry(curve, 100, 0.4, 100, true);
+    this.tubeMaterial = new THREE.ShaderMaterial({
+      side: THREE.FrontSide,
+      uniforms: {
+        progress: { value: 0 },
+        mouse: { value: new THREE.Vector2() },
+        time: { value: 0 },
+        uDots: { value: dotsTexture },
+        uStripes: { value: stripesTexture }
+      },
+      vertexShader: vertexTube,
+      fragmentShader: fragmentTube,
+      transparent: true,
+    })
+
+    this.tube = new THREE.Mesh(this.tubeGeo, this.tubeMaterial);
+    this.scene.add(this.tube);
+
   }
 
   render() {
@@ -121,7 +171,9 @@ export default class Sketch {
     this.material.uniforms.mouse.value = this.mouse;
     this.material.uniforms.time.value = this.time * 0.5;
 
-    this.renderer.render(this.scene, this.camera); // Added this line
+    this.tubeMaterial.uniforms.time.value = this.time * 0.5;
+
+    this.renderer.render(this.scene, this.camera);
     window.requestAnimationFrame(this.render.bind(this));
   }
 }
