@@ -8,9 +8,13 @@ import fragmentParticles from './shader/particles/fragment.glsl';
 import vertexTube from './shader/tube/vertex.glsl';
 import fragmentTube from './shader/tube/fragment.glsl';
 
+import vertexCaustics from './shader/caustics/vertex.glsl';
+import fragmentCaustics from './shader/caustics/fragment.glsl';
+
 import sphere from '../img/sphere-normal.jpg';
 import dots from '../img/dots.png';
 import stripes from '../img/stripes.png';
+import noise from '../img/noise.png';
 
 const { sin, cos, PI } = Math;
 
@@ -163,6 +167,30 @@ export default class Sketch {
     this.tube = new THREE.Mesh(this.tubeGeo, this.tubeMaterial);
     this.scene.add(this.tube);
 
+    let noiseTexture = new THREE.TextureLoader().load(noise);
+    noiseTexture.wrapS = noiseTexture.wrapT = THREE.RepeatWrapping;
+
+    let geo = new THREE.PlaneGeometry(20, 10)
+    this.cau = new THREE.ShaderMaterial({
+      side: THREE.FrontSide,
+      uniforms: {
+        progress: { value: 0 },
+        mouse: { value: new THREE.Vector2() },
+        time: { value: 0 },
+        uDots: { value: dotsTexture },
+        uStripes: { value: stripesTexture },
+        uTexture: { value: noiseTexture }
+      },
+      vertexShader: vertexCaustics,
+      fragmentShader: fragmentCaustics,
+      transparent: true,
+    })
+
+    this.quad = new THREE.Mesh(geo, this.cau);
+    this.quad.position.z = -2;
+
+    this.scene.add(this.quad);
+
   }
 
   render() {
@@ -172,6 +200,8 @@ export default class Sketch {
     this.material.uniforms.time.value = this.time * 0.5;
 
     this.tubeMaterial.uniforms.time.value = this.time * 0.5;
+
+    this.cau.uniforms.time.value = this.time * 0.5;
 
     this.renderer.render(this.scene, this.camera);
     window.requestAnimationFrame(this.render.bind(this));
