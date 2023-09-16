@@ -1,8 +1,8 @@
 # 3D Lissajous Curve Particles Motion Study
 
-Dynamic particles moving along Lissajous curves in 3D space, further animated with sinusoidal computations to simulate a circular pattern around the primary curve.
+Dynamic particles moving along Lissajous curves in 3D space, further animated with sinusoidal computations to simulate a circular pattern around the primary curve. Inspired by [the sea we breathe](https://www.bluemarinefoundation.com/) by [Unseen Studio](https://unseen.co/)
 
-![Currents](https://storage.googleapis.com/rz_github_images/water.gif)
+![Currents](https://storage.googleapis.com/rz_github_images/water.png)
 
 ## Overview
 
